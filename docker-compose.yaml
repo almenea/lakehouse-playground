@@ -1,0 +1,110 @@
+name: lakehouse-playground
+
+services:
+  # --------------------------------------------------------
+  # Storage Layer — SeaweedFS (S3-compatible, all-in-one)
+  # --------------------------------------------------------
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: seaweedfs
+    command: "server -ip=seaweedfs -ip.bind=0.0.0.0 -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json -volume.max=100 -master.volumeSizeLimitMB=100"
+    ports:
+      - "9333:9333"   # Master HTTP API
+      - "8080:8080"   # Volume HTTP
+      - "8333:8333"   # S3 API
+    volumes:
+      - seaweedfs-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    networks:
+      - lakehouse-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9333/cluster/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------------
+  # Catalog — Apache Polaris (Iceberg REST Catalog)
+  # --------------------------------------------------------
+  polaris:
+    image: apache/polaris:latest
+    container_name: polaris
+    ports:
+      - "8181:8181"   # REST API
+      - "8182:8182"   # Management API
+    environment:
+      POLARIS_BOOTSTRAP_CREDENTIALS: ${POLARIS_ADMIN_CREDENTIALS}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_REGION: ${S3_REGION}
+    networks:
+      - lakehouse-net
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8182/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # --------------------------------------------------------
+  # Compute / Query Engine — Trino
+  # --------------------------------------------------------
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    ports:
+      - "8443:8080"   # Trino Web UI & API
+    volumes:
+      - ./trino/etc/config.properties:/etc/trino/config.properties:ro
+      - ./trino/etc/jvm.config:/etc/trino/jvm.config:ro
+      - ./trino/etc/node.properties:/etc/trino/node.properties:ro
+      - ./trino/etc/log.properties:/etc/trino/log.properties:ro
+      - ./trino/etc/catalog/iceberg.properties:/etc/trino/catalog/iceberg.properties:ro
+    networks:
+      - lakehouse-net
+    depends_on:
+      polaris:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
+
+  # --------------------------------------------------------
+  # Notebooks — Jupyter
+  # --------------------------------------------------------
+  jupyter:
+    image: quay.io/jupyter/scipy-notebook:latest
+    container_name: jupyter
+    ports:
+      - "8888:8888"   # Jupyter Lab UI
+    volumes:
+      - ./notebooks:/home/jovyan/work
+    environment:
+      JUPYTER_TOKEN: "lakehouse"
+    command: >-
+      bash -c "pip install -q boto3 requests trino &&
+      start-notebook.py --NotebookApp.token='lakehouse'"
+    networks:
+      - lakehouse-net
+    depends_on:
+      polaris:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
+
+# ============================================================
+# Volumes — Persistent storage
+# ============================================================
+volumes:
+  seaweedfs-data:
+    driver: local
+
+# ============================================================
+# Networks
+# ============================================================
+networks:
+  lakehouse-net:
+    driver: bridge
+    name: lakehouse-net
