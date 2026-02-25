@@ -33,6 +33,13 @@ Navigate to `work/setup.ipynb` and run all cells. The notebook will:
 - ✅ Create Medallion namespaces
 - ✅ Connect to Trino and run your first Iceberg queries
 
+### 3. Explore advanced patterns
+
+| Notebook | Pattern |
+|---|---|
+| `setup.ipynb` | Lakehouse setup & Medallion ETL |
+| `cdc_snapshotting.ipynb` | CDC Log Compaction — MERGE INTO with dedup |
+
 ---
 
 ## Service URLs
@@ -57,7 +64,8 @@ lakehouse-playground/
 ├── requirements.txt        # Python dependencies
 ├── README.md
 ├── notebooks/
-│   └── setup.ipynb         # Interactive setup & hello world
+│   ├── setup.ipynb              # Interactive setup & hello world
+│   └── cdc_snapshotting.ipynb   # CDC log compaction pattern
 ├── seaweedfs/
 │   └── s3.json             # S3 identity config
 └── trino/
