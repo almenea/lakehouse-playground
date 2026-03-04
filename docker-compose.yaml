@@ -37,9 +37,9 @@ services:
       AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
       AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
       AWS_REGION: ${S3_REGION}
-      # CORS Configuration for Polaris UI
+      # CORS Configuration for Polaris Console UI
       QUARKUS_HTTP_CORS_ENABLED: "true"
-      QUARKUS_HTTP_CORS_ORIGINS: "http://localhost:8080"
+      QUARKUS_HTTP_CORS_ORIGINS: "http://localhost:8090"
       QUARKUS_HTTP_CORS_METHODS: "GET,POST,PUT,DELETE,PATCH,OPTIONS"
       QUARKUS_HTTP_CORS_HEADERS: "Content-Type,Authorization,Polaris-Realm,X-Request-ID"
       QUARKUS_HTTP_CORS_EXPOSED_HEADERS: "*"
@@ -56,6 +56,27 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
+
+  # --------------------------------------------------------
+  # Management UI — Apache Polaris Console
+  # Built locally from: https://github.com/apache/polaris-tools
+  #   cd /tmp/polaris-tools/console && make build-docker
+  # --------------------------------------------------------
+  polaris-console:
+    image: apache/polaris-console:latest
+    container_name: polaris-console
+    ports:
+      - "8090:80"   # Console Web UI
+    environment:
+      VITE_POLARIS_API_URL: http://localhost:8181
+      VITE_OAUTH_TOKEN_URL: http://localhost:8181/api/catalog/v1/oauth/tokens
+      VITE_POLARIS_REALM: POLARIS
+      VITE_POLARIS_PRINCIPAL_SCOPE: PRINCIPAL_ROLE:ALL
+    networks:
+      - lakehouse-net
+    depends_on:
+      polaris:
+        condition: service_healthy
 
   # --------------------------------------------------------
   # Compute / Query Engine — Trino
@@ -100,24 +121,6 @@ services:
       polaris:
         condition: service_healthy
       seaweedfs:
-        condition: service_healthy
-
-  # --------------------------------------------------------
-  # Management UI — Apache Polaris Console
-  # --------------------------------------------------------
-  polaris-console:
-    image: apache/polaris-console:latest
-    container_name: polaris-console
-    ports:
-      - "8080:80"   # Console Web UI
-    environment:
-      VITE_POLARIS_API_URL: http://localhost:8181
-      VITE_POLARIS_REALM: POLARIS
-      VITE_POLARIS_PRINCIPAL_SCOPE: PRINCIPAL_ROLE:ALL
-    networks:
-      - lakehouse-net
-    depends_on:
-      polaris:
         condition: service_healthy
 
 # ============================================================
