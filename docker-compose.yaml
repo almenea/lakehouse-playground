@@ -62,21 +62,21 @@ services:
   # Built locally from: https://github.com/apache/polaris-tools
   #   cd /tmp/polaris-tools/console && make build-docker
   # --------------------------------------------------------
-  polaris-console:
-    image: apache/polaris-console:latest
-    container_name: polaris-console
-    ports:
-      - "8090:80"   # Console Web UI
-    environment:
-      VITE_POLARIS_API_URL: http://localhost:8181
-      VITE_OAUTH_TOKEN_URL: http://localhost:8181/api/catalog/v1/oauth/tokens
-      VITE_POLARIS_REALM: POLARIS
-      VITE_POLARIS_PRINCIPAL_SCOPE: PRINCIPAL_ROLE:ALL
-    networks:
-      - lakehouse-net
-    depends_on:
-      polaris:
-        condition: service_healthy
+  # polaris-console:
+  #   image: apache/polaris-console:latest
+  #   container_name: polaris-console
+  #   ports:
+  #     - "8090:80"   # Console Web UI
+  #   environment:
+  #     VITE_POLARIS_API_URL: http://localhost:8181
+  #     VITE_OAUTH_TOKEN_URL: http://localhost:8181/api/catalog/v1/oauth/tokens
+  #     VITE_POLARIS_REALM: POLARIS
+  #     VITE_POLARIS_PRINCIPAL_SCOPE: PRINCIPAL_ROLE:ALL
+  #   networks:
+  #     - lakehouse-net
+  #   depends_on:
+  #     polaris:
+  #       condition: service_healthy
 
   # --------------------------------------------------------
   # Compute / Query Engine — Trino
@@ -104,7 +104,7 @@ services:
   # Notebooks — Jupyter
   # --------------------------------------------------------
   jupyter:
-    image: quay.io/jupyter/scipy-notebook:latest
+    image: jupyter/pyspark-notebook:spark-3.5.0
     container_name: jupyter
     ports:
       - "8888:8888"   # Jupyter Lab UI
@@ -113,7 +113,7 @@ services:
     environment:
       JUPYTER_TOKEN: "lakehouse"
     command: >-
-      bash -c "pip install -q boto3 requests trino &&
+      bash -c "pip install -q boto3 requests trino pyspark==3.5.0 &&
       start-notebook.py --NotebookApp.token='lakehouse'"
     networks:
       - lakehouse-net
