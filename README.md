@@ -40,6 +40,7 @@ Navigate to `work/setup.ipynb` and run all cells. The notebook will:
 | `setup.ipynb` | Lakehouse setup & Medallion ETL |
 | `cdc_snapshotting.ipynb` | CDC Log Compaction — MERGE INTO with dedup |
 | `advanced_views_and_streaming.ipynb` | Incremental Aggregations & CDC via `table_changes` |
+| `advanced_trino_iceberg_features.ipynb` | Object Store Layout, ANALYZE, `add_files`, Metadata Caching |
 
 ---
 
@@ -67,7 +68,8 @@ lakehouse-playground/
 ├── notebooks/
 │   ├── setup.ipynb              # Interactive setup & hello world
 │   ├── cdc_snapshotting.ipynb   # CDC log compaction pattern
-│   └── advanced_views_and_streaming.ipynb # Incremental Aggregations & table_changes
+│   ├── advanced_views_and_streaming.ipynb # Incremental Aggregations & table_changes
+│   └── advanced_trino_iceberg_features.ipynb # Object Store Layout, ANALYZE, add_files, Metadata Cache
 ├── seaweedfs/
 │   └── s3.json             # S3 identity config
 └── trino/
