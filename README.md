@@ -38,6 +38,7 @@ Navigate to `work/setup.ipynb` and run all cells. The notebook will:
 | Notebook | Pattern |
 |---|---|
 | `setup.ipynb` | Lakehouse setup & Medallion ETL |
+| `authorization_with_opa.ipynb` | External Authorization with OPA (Admin, Data Engineer, Analyst roles) |
 | `cdc_snapshotting.ipynb` | CDC Log Compaction — MERGE INTO with dedup |
 | `advanced_views_and_streaming.ipynb` | Incremental Aggregations & CDC via `table_changes` |
 | `advanced_trino_iceberg_features.ipynb` | Object Store Layout, ANALYZE, `add_files` |
@@ -69,11 +70,15 @@ lakehouse-playground/
 ├── README.md
 ├── notebooks/
 │   ├── setup.ipynb              # Interactive setup & hello world
+│   ├── authorization_with_opa.ipynb # External Authorization with OPA
 │   ├── cdc_snapshotting.ipynb   # CDC log compaction pattern
 │   ├── advanced_views_and_streaming.ipynb # Incremental Aggregations & table_changes
 │   ├── advanced_trino_iceberg_features.ipynb # Object Store Layout, ANALYZE, add_files, Metadata Cache
 │   ├── evolution.ipynb          # Schema, Partition & Sort Order Evolution
 │   └── maintenance.ipynb        # Iceberg table maintenance operations
+├── opa/
+│   └── policies/
+│       └── polaris_authz.rego   # OPA external authorization policy
 ├── seaweedfs/
 │   └── s3.json             # S3 identity config
 └── trino/

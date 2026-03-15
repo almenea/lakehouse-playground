@@ -45,17 +45,34 @@ services:
       QUARKUS_HTTP_CORS_EXPOSED_HEADERS: "*"
       QUARKUS_HTTP_CORS_ACCESS_CONTROL_ALLOW_CREDENTIALS: "true"
       QUARKUS_HTTP_CORS_ACCESS_CONTROL_MAX_AGE: "PT10M"
+      # OPA configuration mapped from properties via Quarkus env var mapping
+      POLARIS_AUTHORIZATION_TYPE: "opa"
+      POLARIS_AUTHORIZATION_OPA_POLICY_URI: "http://opa:8181/v1/data/polaris/authz"
     networks:
       - lakehouse-net
     depends_on:
       seaweedfs:
         condition: service_healthy
+      opa:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8182/q/health"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 15s
+
+  # --------------------------------------------------------
+  # External Policy Engine — OPA
+  # --------------------------------------------------------
+  opa:
+    image: openpolicyagent/opa:latest
+    container_name: opa
+    command: ["run", "--server", "--addr=0.0.0.0:8181", "--set=decision_logs.console=true", "/policies"]
+    volumes:
+      - ./opa/policies:/policies:ro
+    networks:
+      - lakehouse-net
 
   # --------------------------------------------------------
   # Management UI — Apache Polaris Console
