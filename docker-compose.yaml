@@ -5,7 +5,7 @@ services:
   # Storage Layer — SeaweedFS (S3-compatible, all-in-one)
   # --------------------------------------------------------
   seaweedfs:
-    image: chrislusf/seaweedfs:latest
+    image: chrislusf/seaweedfs:4.17
     container_name: seaweedfs
     command: "server -ip=seaweedfs -ip.bind=0.0.0.0 -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json -volume.max=100 -master.volumeSizeLimitMB=100"
     ports:
@@ -27,7 +27,7 @@ services:
   # Catalog — Apache Polaris (Iceberg REST Catalog)
   # --------------------------------------------------------
   polaris:
-    image: apache/polaris:latest
+    image: apache/polaris:1.3.0-incubating
     container_name: polaris
     ports:
       - "8181:8181"   # REST API
@@ -82,7 +82,7 @@ services:
   # Compute / Query Engine — Trino
   # --------------------------------------------------------
   trino:
-    image: trinodb/trino:latest
+    image: trinodb/trino:479
     container_name: trino
     ports:
       - "8443:8080"   # Trino Web UI & API
@@ -92,6 +92,10 @@ services:
       - ./trino/etc/node.properties:/etc/trino/node.properties:ro
       - ./trino/etc/log.properties:/etc/trino/log.properties:ro
       - ./trino/etc/catalog/iceberg.properties:/etc/trino/catalog/iceberg.properties:ro
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      POLARIS_CREDENTIAL: "${POLARIS_CLIENT_ID}:${POLARIS_CLIENT_SECRET}"
     networks:
       - lakehouse-net
     depends_on:
@@ -99,6 +103,12 @@ services:
         condition: service_healthy
       seaweedfs:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/v1/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   # --------------------------------------------------------
   # Notebooks — Jupyter
@@ -110,10 +120,20 @@ services:
       - "8888:8888"   # Jupyter Lab UI
     volumes:
       - ./notebooks:/home/jovyan/work
+      - ./requirements.txt:/tmp/requirements.txt:ro
     environment:
       JUPYTER_TOKEN: "lakehouse"
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_REGION: ${S3_REGION}
+      S3_ENDPOINT: http://seaweedfs:8333
+      POLARIS_URL: http://polaris:8181
+      POLARIS_CLIENT_ID: ${POLARIS_CLIENT_ID}
+      POLARIS_CLIENT_SECRET: ${POLARIS_CLIENT_SECRET}
+      TRINO_HOST: trino
+      TRINO_PORT: "8080"
     command: >-
-      bash -c "pip install -q boto3 requests trino pyspark==3.5.0 &&
+      bash -c "pip install -q --retries 3 --timeout 60 -r /tmp/requirements.txt &&
       start-notebook.py --NotebookApp.token='lakehouse'"
     networks:
       - lakehouse-net
@@ -121,6 +141,8 @@ services:
       polaris:
         condition: service_healthy
       seaweedfs:
+        condition: service_healthy
+      trino:
         condition: service_healthy
 
 # ============================================================
