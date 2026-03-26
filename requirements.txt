@@ -1,4 +1,4 @@
-boto3
-requests
-trino[sqlalchemy]
-jupyter
+# Only packages NOT already in jupyter/pyspark-notebook:spark-3.5.0
+# Pre-installed: pyspark 3.5.0, pandas, pyarrow, requests
+boto3>=1.35.0
+trino>=0.330.0
