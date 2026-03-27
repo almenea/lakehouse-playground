@@ -62,6 +62,7 @@ Navigate to `work/01_setup.ipynb` and run all cells. The notebook will:
 | 5 | `05_write_audit_publish.ipynb` | Write-Audit-Publish — safe ingestion with Iceberg branches (PySpark) |
 | 6 | `06_advanced_views_and_streaming.ipynb` | Incremental Aggregations & CDC via `table_changes` |
 | 7 | `07_advanced_trino_iceberg_features.ipynb` | Object Store Layout, ANALYZE, `add_files` |
+| 8 | `08_role_based_access_control.ipynb` | Fine-grained RBAC with Apache Polaris — Partial Silver Share |
 
 ---
 
@@ -93,7 +94,8 @@ lakehouse-playground/
 │   ├── 04_maintenance.ipynb                 # Iceberg table maintenance operations
 │   ├── 05_write_audit_publish.ipynb         # WAP with Iceberg branches (PySpark)
 │   ├── 06_advanced_views_and_streaming.ipynb # Incremental aggregations & table_changes
-│   └── 07_advanced_trino_iceberg_features.ipynb # Object Store Layout, ANALYZE, add_files
+│   ├── 07_advanced_trino_iceberg_features.ipynb # Object Store Layout, ANALYZE, add_files
+│   └── 08_role_based_access_control.ipynb      # Fine-grained RBAC with Apache Polaris
 ├── seaweedfs/
 │   └── s3.json                  # S3 identity config
 └── trino/
